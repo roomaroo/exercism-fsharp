@@ -1,0 +1,13 @@
+c:\Users\olimau\Exercism\fsharp\grade-school\bin\Debug\netcoreapp2.0\xunit.runner.visualstudio.dotnetcore.testadapter.dll
+c:\Users\olimau\Exercism\fsharp\grade-school\bin\Debug\netcoreapp2.0\xunit.runner.reporters.netcoreapp10.dll
+c:\Users\olimau\Exercism\fsharp\grade-school\bin\Debug\netcoreapp2.0\xunit.runner.utility.netcoreapp10.dll
+c:\Users\olimau\Exercism\fsharp\grade-school\bin\Debug\netcoreapp2.0\GradeSchool.deps.json
+c:\Users\olimau\Exercism\fsharp\grade-school\bin\Debug\netcoreapp2.0\GradeSchool.runtimeconfig.json
+c:\Users\olimau\Exercism\fsharp\grade-school\bin\Debug\netcoreapp2.0\GradeSchool.runtimeconfig.dev.json
+c:\Users\olimau\Exercism\fsharp\grade-school\bin\Debug\netcoreapp2.0\GradeSchool.dll
+c:\Users\olimau\Exercism\fsharp\grade-school\bin\Debug\netcoreapp2.0\GradeSchool.pdb
+c:\Users\olimau\Exercism\fsharp\grade-school\obj\Debug\netcoreapp2.0\GradeSchool.fsprojAssemblyReference.cache
+c:\Users\olimau\Exercism\fsharp\grade-school\obj\Debug\netcoreapp2.0\GradeSchool.dll
+c:\Users\olimau\Exercism\fsharp\grade-school\obj\Debug\netcoreapp2.0\GradeSchool.pdb
+c:\Users\olimau\Exercism\fsharp\grade-school\obj\Debug\netcoreapp2.0\GradeSchool.AssemblyInfoInputs.cache
+c:\Users\olimau\Exercism\fsharp\grade-school\obj\Debug\netcoreapp2.0\GradeSchool.AssemblyInfo.fs
