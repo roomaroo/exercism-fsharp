@@ -2,8 +2,6 @@ module Clock
 
 type Clock = {Hours: int; Minutes: int}
 
-
-
 let create hours minutes = 
     let minutesPastHour = (60 + (minutes % 60)) % 60
 
