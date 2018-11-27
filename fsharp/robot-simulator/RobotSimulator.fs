@@ -1,46 +1,38 @@
 ﻿module RobotSimulator
 
-type Direction = North | East | South | West
-type Position = int * int
+type Direction = 
+    North = 0
+    | East = 1
+    | South = 2
+    | West = 3
 
-type Robot = { direction: Direction; position: Position }
+type Robot = {Position: int * int; Direction: Direction}
 
 let create direction position = 
-    {direction = direction; position = position}
+    {Direction = direction; Position = position}
+    
+let turn robot = 
+    let newDirection = (int robot.Direction + 1) % 4 |> enum
+    {robot with Direction = newDirection}
 
-let turnLeft robot =
-    match robot.direction with
-    | North -> {robot with direction = West}
-    | East -> {robot with direction = North}
-    | South -> {robot with direction = East}
-    | West -> {robot with direction = South}
+let advance robot = 
+    let addVector (x, y) (x', y') = (x + x', y + y')
+    let fn = addVector robot.Position
 
-let turnRight robot =
-    match robot.direction with
-    | North -> {robot with direction = East}
-    | East -> {robot with direction = South}
-    | South -> {robot with direction = West}
-    | West -> {robot with direction = North}
+    {robot with Position = 
+                match robot.Direction with
+                | Direction.North -> fn (0, 1)
+                | Direction.East -> fn (1, 0)
+                | Direction.South -> fn (0, -1)
+                | Direction.West -> fn (-1, 0)
+                | _ -> robot.Position}
 
-let addVectors (x1, y1) (x2, y2) = 
-    (x1 + x2, y1 + y2)
-
-let advance robot =
-    let move = 
-        match robot.direction with
-        | North -> (0, 1)
-        | East -> (1, 0)
-        | South -> (0, -1)
-        | West -> (-1, 0)
-
-    {robot with position = addVectors robot.position move}  
-
-let executeInstruction robot instruction = 
-    match instruction with
-    | 'R' -> turnRight robot
-    | 'L' -> turnLeft robot
+let singleMove robot command =
+    match command with
+    | 'R' -> robot |> turn
+    | 'L' -> robot |> (turn >> turn >> turn)
     | 'A' -> advance robot
-    | _ -> failwith (sprintf "Unknown instruction '%c'" instruction)
+    | _ -> robot
 
-let instructions (instructions': string) robot = 
-    Seq.fold executeInstruction robot instructions'         
+let move (commands: string) robot =
+    Seq.fold singleMove robot commands
