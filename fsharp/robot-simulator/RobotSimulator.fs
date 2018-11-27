@@ -16,8 +16,9 @@ let turn robot =
     {robot with Direction = newDirection}
 
 let advance robot = 
-    let addVector (x, y) (x', y') = (x + x', y + y')
-    let fn = addVector robot.Position
+    let fn (x', y') = 
+        let (x, y) = robot.Position
+        (x + x', y + y')
 
     {robot with Position = 
                 match robot.Direction with
