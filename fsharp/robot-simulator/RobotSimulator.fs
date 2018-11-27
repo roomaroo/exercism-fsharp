@@ -27,12 +27,12 @@ let advance robot =
                 | Direction.West -> fn (-1, 0)
                 | _ -> robot.Position}
 
-let singleMove robot command =
-    match command with
-    | 'R' -> robot |> turn
-    | 'L' -> robot |> (turn >> turn >> turn)
-    | 'A' -> advance robot
-    | _ -> robot
-
 let move (commands: string) robot =
+    let singleMove r command =
+        match command with
+        | 'R' -> r |> turn
+        | 'L' -> r |> (turn >> turn >> turn)
+        | 'A' -> advance r
+        | _ -> r
+
     Seq.fold singleMove robot commands
