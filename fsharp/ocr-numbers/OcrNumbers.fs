@@ -1,5 +1,6 @@
 module OcrNumbers
 
+open System
 let numbers = 
     Map.ofList [
         [" _ ";
@@ -44,53 +45,48 @@ let numbers =
          "   "], "9";
     ]
 
+let rec splitDigits lists = 
+  match lists with
+  | [h1::t1;h2::t2;h3::t3;h4::t4] -> [h1;h2;h3;h4]::(splitDigits [t1;t2;t3;t4])
+  | _ -> []
+
+let toString (chars: char seq) = 
+  chars |> System.String.Concat
+
 let isCorrectSize input = 
     List.map Seq.length input = [3;3;3;3]
-    
-let charsToString (chars: char seq) = 
-    chars |> System.String.Concat
 
-let parseDigit input = 
+let parse input = 
     match Map.tryFind input numbers with
-    | Some num -> Some num
+    | Some number -> Some number
     | None when isCorrectSize input -> Some "?"
     | _ -> None
 
-let rec splitDigits (input: string list list) =
-    match input with
-    | [h1::t1;h2::t2;h3::t3;h4::t4] -> [h1;h2;h3;h4]::splitDigits [t1;t2;t3;t4]
-    | _ -> []
-
-let combineOptions f a b =
+let combineOptions fn a b = 
     match a, b with
-    | Some a', Some b' -> Some(f a' b')
-    | _ -> None 
-    
+    | Some a', Some b' -> Some(fn a' b')
+    | _ -> None
+ 
 let join a b = 
-    if String.length a = 0 then 
+    if String.length a = 0 then
         b
     else if String.length b = 0 then
         a
-    else      
-        System.String.Join(",", a, b)
+    else
+        String.Join(",", a, b)
 
-let parseLine (line: string list) = 
-    if List.length line = 4 then
-        line 
-        |> List.map (Seq.chunkBySize 3 >> Seq.map charsToString >> List.ofSeq)
-        |> splitDigits
-        |> List.map parseDigit
+let convertLine rows = 
+    if List.length rows = 4 then
+        rows
+        |> List.map (Seq.chunkBySize 3 >> List.ofSeq)
+        |> splitDigits 
+        |> List.map (List.map toString >> parse)
         |> List.fold (combineOptions (+)) (Some "")
     else
-        None
+        None    
 
-let convert (lines: string list) = 
-    if List.length lines % 4 = 0 then
-        lines
-        |> List.chunkBySize 4
-        |> List.map parseLine
-        |> List.fold (combineOptions join) (Some"")
-    else
-        None
-
-    
+let convert rows = 
+    rows
+    |> List.chunkBySize 4
+    |> List.map convertLine
+    |> List.fold (combineOptions join) (Some "")    
