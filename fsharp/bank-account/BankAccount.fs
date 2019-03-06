@@ -14,19 +14,14 @@ let lock (f: Account -> unit) account =
 
 let mkBankAccount() = {Balance = None; Mutex = obj()}
 
-let openAccount account =
-    lock (fun a -> a.Balance <- defaultArg account.Balance 0.0m |> Some) account
+let openAccount =
+    lock (fun a -> a.Balance <- defaultArg a.Balance 0.0m |> Some)
     
-let closeAccount account = 
-    lock (fun a -> a.Balance <- None) account
+let closeAccount = 
+    lock (fun a -> a.Balance <- None)
 
 let getBalance account = 
     account.Balance
 
-let updateBalance change account = 
-    let update account = 
-        match account.Balance with
-        | Some x -> account.Balance <- Some(x + change)
-        | None -> ()
-
-    lock update account
+let updateBalance change = 
+    lock (fun a -> a.Balance <- Option.map ((+) change) a.Balance)
