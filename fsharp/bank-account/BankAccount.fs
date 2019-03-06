@@ -6,9 +6,11 @@ type Account = {mutable Balance: decimal option; Mutex: obj}
 
 let lock (f: Account -> unit) account = 
     if Monitor.TryEnter(account.Mutex, TimeSpan.FromMilliseconds(100.0)) then
-        f account
-        Monitor.Exit account.Mutex
-        account
+        try
+            f account
+            account
+        finally        
+            Monitor.Exit account.Mutex
     else
         failwith "Failed to lock account"
 
