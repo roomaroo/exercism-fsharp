@@ -46,8 +46,7 @@ type RestApi(database : string) =
             owes = Map.empty
             owed_by = Map.empty
             balance = 0.0 }
-
-        let users = newUser::db.users |> List.sortBy (fun u -> u.name)
+            
         newUser
 
     let getUserByName name = 
@@ -58,8 +57,7 @@ type RestApi(database : string) =
         db.users
         |> List.filter (fun u -> Seq.contains u.name request.users)
         |> fun uu -> {users = uu}
-        |> serialize
-
+        
     let addTransaction name amount transactions = 
         let amount = 
             Map.tryFind name transactions 
@@ -97,6 +95,7 @@ type RestApi(database : string) =
                 payload 
                 |> deserialize<GetUserRequest>
                 |> getUsers
+                |> serialize
         | _ -> failwith "404"            
 
     member this.Post(url: string, payload: string)  =
