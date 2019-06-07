@@ -2,12 +2,70 @@
 
 open Newtonsoft.Json
 
+let deserialize<'a>(json: string) = 
+    JsonConvert.DeserializeObject<'a>(json)
+
+let serialize x = JsonConvert.SerializeObject(x)
+
+type Loan = {
+    name: string
+    amount: decimal
+}
+
 type User = {
     name: string
-    owes: Map<string, float>
-    owed_by: Map<string, float>
-    balance: float
+    transactions : Loan list
+    } with 
+    member this.OwedBy 
+        with get() = 
+            this.transactions
+            |> List.groupBy (fun t -> t.name)
+            |> List.map (fun (name, transactions) -> (name, transactions |> List.sumBy (fun t -> t.amount)))
+            |> List.filter (fun (_, amount) -> amount < 0m)
+            |> List.map (fun (name, amount) -> (name, -1m * amount))
+            |> Map.ofList
+
+    member this.Owes 
+        with get() = 
+            this.transactions
+            |> List.groupBy (fun t -> t.name)
+            |> List.map (fun (name, transactions) -> (name, transactions |> List.sumBy (fun t -> t.amount)))
+            |> List.filter (fun (_, amount) -> amount > 0m)
+            |> Map.ofList     
+
+    member this.Balance 
+        with get() = 
+            this.transactions
+            |> List.sumBy (fun t -> -1m * t.amount)
+
+
+type UserDto = {
+    name: string
+    owes: Map<string, decimal>
+    owed_by: Map<string, decimal>
+    balance: decimal
 }
+
+let fromDto (userDto: UserDto) : User = 
+    let borrowed = 
+        userDto.owes
+        |> Map.toList
+        |> List.map (fun (name, amount) -> {name=name; amount=amount})
+
+    let lent = 
+        userDto.owed_by
+        |> Map.toList
+        |> List.map (fun (name, amount) -> {name=name; amount= -1m * amount})
+
+    {name = userDto.name; transactions = borrowed @ lent }
+
+let toDto (user: User) : UserDto = 
+    {
+        name = user.name
+        owes = user.Owes
+        owed_by = user.OwedBy
+        balance = user.Balance
+    }
 
 type AddUserRequest = {
     user: string
@@ -17,77 +75,54 @@ type GetUserRequest = {
     users: string list
 }
 
-type UsersResponse = {
-    users: User list
-}
-
 type IouRequest = {
     lender: string
     borrower: string
-    amount: float
+    amount: decimal
 }
 
 type Database = {
     users: User list
 }
 
-let deserialize<'a>(json: string) = 
-    JsonConvert.DeserializeObject<'a>(json)
-
-let serialize x = JsonConvert.SerializeObject(x)
+type DatabaseDto = {
+    [<JsonProperty("users")>]
+    userDtos: UserDto list
+}
 
 type RestApi(database : string) =
 
-    let db = deserialize<Database>(database)
+    let db = 
+        deserialize<DatabaseDto>(database) 
+        |> fun dto -> {users = List.map fromDto dto.userDtos}
 
     let addUser request = 
-        let newUser = {
-            name = request.user
-            owes = Map.empty
-            owed_by = Map.empty
-            balance = 0.0 }
-            
-        newUser
+        { name = request.user
+          owes = Map.empty
+          owed_by = Map.empty
+          balance = 0m }
 
     let getUserByName name = 
         db.users 
         |> List.find (fun u -> u.name = name)
 
-    let getUsers (request: GetUserRequest) = 
+    let getUsers (request: GetUserRequest) : DatabaseDto = 
         db.users
         |> List.filter (fun u -> Seq.contains u.name request.users)
-        |> fun uu -> {users = uu}
+        |> List.map toDto
+        |> fun dtos -> {userDtos = dtos}
         
-    let addTransaction name amount transactions = 
-        let amount = 
-            Map.tryFind name transactions 
-            |> Option.map (fun x -> x + amount)
-            |> Option.defaultValue amount
-
-        match amount with
-        | x when x <= 0.0 -> Map.remove name transactions
-        | x -> Map.add name x transactions
-
-    let applyIou (request: IouRequest) : UsersResponse =
+    let applyIou (request: IouRequest) : DatabaseDto =
         let lender = getUserByName request.lender
         let borrower = getUserByName request.borrower
 
-        let lender = 
-            {lender with 
-                owes = addTransaction borrower.name (-1.0 * request.amount) lender.owes
-                owed_by = addTransaction borrower.name request.amount lender.owed_by
-                balance = lender.balance + request.amount}
+        let lender = {lender with transactions = {name = borrower.name; amount = (-1m * request.amount)}::lender.transactions}
+        let borrower = {borrower with transactions = {name = lender.name; amount = request.amount}::borrower.transactions}
 
-        let borrower = 
-            {borrower with 
-                owes = addTransaction lender.name request.amount borrower.owes
-                owed_by = addTransaction lender.name (-1.0 * request.amount) borrower.owed_by
-                balance = borrower.balance - request.amount}
-
-        {users = [borrower; lender] |> List.sortBy (fun u -> u.name)}
+        {userDtos = [borrower; lender] |> List.map toDto |> List.sortBy (fun u -> u.name)}
 
     member this.Get(url: string) =
-        serialize db
+        {userDtos = db.users |> List.map toDto} |> serialize
 
     member this.Get(url: string, payload: string) =
         match url with
