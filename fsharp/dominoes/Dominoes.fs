@@ -9,7 +9,7 @@ let selectNthDomino dominoes n =
 
     (nth, others)
 
-let makeChain (x1, y1) others =
+let makeChain ((x1, y1), others) =
     match others with
     | (x2, y2)::xs when y1 = x2 -> (x1, y2)::xs |> Some
     | (x2, y2)::xs when x1 = x2 -> (y1, y2)::xs |> Some
@@ -23,6 +23,6 @@ let rec canChain input =
     | _ -> 
         [0..(List.length input) - 1]
         |> List.map (selectNthDomino input)
-        |> List.choose (fun (x, xs) -> makeChain x xs) 
+        |> List.choose makeChain
         |> List.map canChain
         |> List.exists id
